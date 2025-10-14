@@ -1,25 +1,22 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const {
-  getEvents,
   createEvent,
+  getEvents,
   updateEvent,
   deleteEvent,
-  getEventById
+  addAttendee,
+  getEventById,
+  removeAttendee,
 } = require('../controllers/eventController');
+const { protect } = require('../middleware/authMiddleware');
 
-// GET all events
-router.get('/', getEvents);
+// All routes here are protected
+router.route('/').get(protect, getEvents).post(protect, createEvent);
+router.route('/:id').get(protect, getEventById).put(protect, updateEvent).delete(protect, deleteEvent);
 
-// GET a single event by ID
-router.get('/:id', getEventById);
+// Route for managing attendees for a specific event
+router.route('/:id/attendees').post(protect, addAttendee).delete(protect, removeAttendee);
 
-// POST a new event
-router.post('/', createEvent);
-
-// PUT to update an event
-router.put('/:id', updateEvent);
-
-// DELETE an event
-router.delete('/:id', deleteEvent);
 
 module.exports = router;

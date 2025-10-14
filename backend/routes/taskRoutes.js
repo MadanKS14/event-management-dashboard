@@ -1,21 +1,19 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const {
-  getTasksForEvent,
   createTask,
+  getTasksByEvent,
   updateTaskStatus,
-  deleteTask
-} = require('../controllers/TaskController');
+  getEventProgress,
+} = require('../controllers/taskController');
+const { protect } = require('../middleware/authMiddleware');
 
-// GET tasks for a specific event
-router.get('/event/:eventId', getTasksForEvent);
+// Protect all task routes
+router.use(protect);
 
-// POST a new task
 router.post('/', createTask);
-
-// PATCH to update a task's status
-router.patch('/:id', updateTaskStatus);
-
-// DELETE a task
-router.delete('/:id', deleteTask);
+router.get('/event/:eventId', getTasksByEvent);
+router.put('/:id', updateTaskStatus);
+router.get('/progress/:eventId', getEventProgress); // For the bonus point
 
 module.exports = router;

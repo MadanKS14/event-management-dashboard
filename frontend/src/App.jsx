@@ -1,31 +1,29 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
-import Events from './pages/Events'
-import Attendees from './pages/Attendees'
-import Tasks from './pages/Tasks'
-import Calendar from './pages/Calender'
-import Sidebar from './components/Sidebar'
-import Navbar from './components/Navbar'
+// src/App.jsx
 
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-export default function App() {
-return (
-<div className="min-h-screen flex">
-<Sidebar />
-<div className="flex-1">
-<Navbar />
-<main className="p-6">
-<Routes>
-<Route path="/" element={<Navigate to="/dashboard" replace />} />
-<Route path="/dashboard" element={<Dashboard />} />
-<Route path="/events" element={<Events />} />
-<Route path="/attendees" element={<Attendees />} />
-<Route path="/tasks" element={<Tasks />} />
-<Route path="/calendar" element={<Calendar />} />
-</Routes>
-</main>
-</div>
-</div>
-)
+// --- ADD THIS IMPORT and others that are missing ---
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
+import EventDetailPage from './pages/EventDetailPage';
+import ProtectedRoute from './components/ProtectedRoute';
+
+function App() {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Protected Routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/event/:id" element={<ProtectedRoute><EventDetailPage /></ProtectedRoute>} />
+    </Routes>
+  );
 }
+
+export default App;

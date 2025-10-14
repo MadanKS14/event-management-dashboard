@@ -1,121 +1,85 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+// src/components/EventModal.jsx
 
-// Validation schema using Yup
-const schema = yup.object({
-  name: yup.string().required("Event name is required"),
-  description: yup.string().required("Description is required"),
-  location: yup.string().required("Location is required"),
-  date: yup.date().required("Date is required"),
-});
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import FormInput from './FormInput';
 
-export default function EventModal({ initialData = null, onClose, onSave }) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: initialData
-      ? {
-          name: initialData.name,
-          description: initialData.description,
-          location: initialData.location,
-          date: initialData.date
-            ? initialData.date.substring(0, 10)
-            : "",
-        }
-      : {},
+const EventModal = ({ isOpen, onClose, onSave, eventToEdit }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    date: '',
+    location: '',
   });
 
+  // This effect pre-fills the form when editing an event
+  useEffect(() => {
+    if (eventToEdit) {
+      setFormData({
+        name: eventToEdit.name,
+        description: eventToEdit.description,
+        // Format date to YYYY-MM-DD for the date input field
+        date: new Date(eventToEdit.date).toISOString().split('T')[0],
+        location: eventToEdit.location,
+      });
+    } else {
+      // Reset form for creating a new event
+      setFormData({ name: '', description: '', date: '', location: '' });
+    }
+  }, [eventToEdit, isOpen]); // Rerun when the event to edit or modal visibility changes
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const isEditing = !!eventToEdit;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <form
-        className="bg-white rounded-lg p-6 w-[520px] shadow-lg"
-        onSubmit={handleSubmit(onSave)}
-      >
-        <h2 className="text-xl font-semibold mb-5">
-          {initialData ? "Edit Event" : "Add Event"}
-        </h2>
-
-        {/* Name */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input
-            {...register("name")}
-            className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            placeholder="Enter event name"
-          />
-          {errors.name && (
-            <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">
-            Description
-          </label>
-          <textarea
-            {...register("description")}
-            rows="3"
-            className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            placeholder="Enter event description"
-          ></textarea>
-          {errors.description && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
-
-        {/* Location */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input
-            {...register("location")}
-            className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            placeholder="Enter event location"
-          />
-          {errors.location && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.location.message}
-            </p>
-          )}
-        </div>
-
-        {/* Date */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <input
-            type="date"
-            {...register("date")}
-            className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-          />
-          {errors.date && (
-            <p className="text-sm text-red-500 mt-1">{errors.date.message}</p>
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            className="px-4 py-2 rounded border"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Save
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+      <div className="bg-[#122142] p-8 rounded-xl shadow-lg w-full max-w-lg border border-gray-700 mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">
+            {isEditing ? 'Edit Event' : 'Create New Event'}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X size={24} />
           </button>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormInput id="name" label="Event Name" type="text" placeholder="e.g., Annual Tech Summit" value={formData.name} onChange={handleChange} />
+          <FormInput id="description" label="Description" type="text" placeholder="Describe your event" value={formData.description} onChange={handleChange} />
+          <FormInput id="date" label="Date" type="date" value={formData.date} onChange={handleChange} />
+          <FormInput id="location" label="Location" type="text" placeholder="e.g., Bengaluru" value={formData.location} onChange={handleChange} />
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="py-2 px-4 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-600 transition-colors"
+            >
+              {isEditing ? 'Update Event' : 'Create Event'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
-}
+};
+
+export default EventModal;
