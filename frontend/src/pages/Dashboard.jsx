@@ -3,22 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, Search } from 'lucide-react'; // Import the Search icon
 import toast from 'react-hot-toast';
 import EventCard from '../components/EventCard';
 import EventModal from '../components/EventModal';
-import SkeletonCard from '../components/SkeletonCard'; // Import the skeleton card
+import SkeletonCard from '../components/SkeletonCard';
 
 const Dashboard = () => {
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true); // State for initial page load
-  const [isSaving, setIsSaving] = useState(false); // State for modal save/update actions
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // State for the search bar
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
-    setLoading(true); // Start loading when fetching
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -41,7 +42,7 @@ const Dashboard = () => {
       console.error('Failed to fetch events:', error);
       toast.error("Could not fetch events.");
     } finally {
-      setLoading(false); // Stop loading when fetch is complete
+      setLoading(false);
     }
   };
 
@@ -74,7 +75,7 @@ const Dashboard = () => {
       });
 
       handleCloseModal();
-      fetchEvents();
+      await fetchEvents();
     } catch (error) {
       console.error('Failed to save event:', error);
     } finally {
@@ -94,8 +95,7 @@ const Dashboard = () => {
         error: 'Failed to delete event.',
       });
       
-      // Refetch events to ensure consistency
-      fetchEvents();
+      await fetchEvents();
     }
   };
 
@@ -105,22 +105,41 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  // Filter events based on the search term before rendering
+  const filteredEvents = events.filter(event =>
+    event.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="bg-[#0A1931] min-h-screen text-white p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div>
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+          {/* Left Section: Title */}
+          <div className="shrink-0">
             <h1 className="text-3xl font-bold text-white">My Events</h1>
-            <p className="text-gray-400 mt-1">Here’s what you’ve got planned.</p>
           </div>
-          <div className="flex gap-4 mt-4 sm:items-center sm:mt-0">
+
+          {/* Center Section: Search Bar */}
+          <div className="relative w-full sm:w-auto sm:flex-grow sm:max-w-md">
+            <input
+              type="text"
+              placeholder="Search events by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[#1F294A] border border-gray-600 rounded-lg py-2 pl-10 pr-4 w-full focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          </div>
+
+          {/* Right Section: Action Buttons */}
+          <div className="flex gap-2 sm:gap-4 items-center shrink-0">
             <Link to="/calendar" className="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-gray-700 transition-colors">
               <Calendar size={18} />
-              Calendar View
+              <span className="hidden sm:inline">Calendar</span>
             </Link>
             <button onClick={() => handleOpenModal()} className="bg-amber-500 text-black font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-amber-600 transition-colors">
               <Plus size={20} />
-              Add New Event
+              <span className="hidden sm:inline">Add Event</span>
             </button>
             <button onClick={handleLogout} className="bg-red-600/80 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
               Log Out
@@ -128,23 +147,29 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Conditional rendering for loading state */}
+        {/* Conditional rendering for loading, events, or empty states */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
           </div>
-        ) : events.length > 0 ? (
+        ) : filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <EventCard key={event._id} event={event} onDelete={handleDeleteEvent} onEdit={handleOpenModal} />
             ))}
           </div>
         ) : (
           <div className="text-center py-16 bg-[#122142] rounded-xl">
-            <p className="text-gray-400 text-lg">You haven't created any events yet.</p>
-            <p className="text-gray-500 mt-2">Click "Add New Event" to get started!</p>
+            {searchTerm ? (
+              <p className="text-gray-400 text-lg">No events found matching "{searchTerm}".</p>
+            ) : (
+              <>
+                <p className="text-gray-400 text-lg">You haven't created any events yet.</p>
+                <p className="text-gray-500 mt-2">Click "Add New Event" to get started!</p>
+              </>
+            )}
           </div>
         )}
       </div>
