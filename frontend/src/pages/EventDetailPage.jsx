@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { ArrowLeft, Calendar, MapPin, Users, ClipboardList, UserPlus, X } from 'lucide-react';
 import TaskItem from '../components/TaskItem';
 
@@ -63,29 +64,35 @@ const EventDetailPage = () => {
 
     useEffect(() => {
         fetchEventData();
-    }, [id]); // Only refetch when the event ID changes
+    }, [id]);
 
     // Handles adding a new task
     const handleAddTask = async (e) => {
         e.preventDefault();
         if (!newTaskName.trim() || !assignedAttendeeId) {
-            alert("Please provide a task name and select an assignee.");
+            toast.error("Please provide a task name and select an assignee.");
             return;
         }
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/tasks', {
+            const promise = axios.post('http://localhost:5000/api/tasks', {
                 name: newTaskName,
-                deadline: new Date(), // Consider adding a date picker input for this
+                deadline: new Date(),
                 eventId: id,
                 assignedAttendeeId: assignedAttendeeId,
             }, { headers: { Authorization: `Bearer ${token}` } });
             
-            setNewTaskName(''); // Reset form
-            await fetchEventData(); // Refetch all data to get updated task list and progress
+            toast.promise(promise, {
+                loading: 'Adding task...',
+                success: 'Task added successfully!',
+                error: 'Failed to add task.',
+            });
+
+            await promise;
+            setNewTaskName('');
+            await fetchEventData();
         } catch (error) {
             console.error("Failed to add task:", error);
-            alert('Failed to add task.');
         }
     };
 
@@ -95,9 +102,10 @@ const EventDetailPage = () => {
             const token = localStorage.getItem('token');
             const response = await axios.put(`http://localhost:5000/api/tasks/${taskId}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
             setTasks(tasks.map(task => task._id === taskId ? response.data : task));
-            await fetchProgress(); // Just refetch progress, no need to refetch everything
+            await fetchProgress();
         } catch (error) {
             console.error("Failed to update task status:", error);
+            toast.error("Failed to update task status.");
         }
     };
 
@@ -106,9 +114,10 @@ const EventDetailPage = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.post(`http://localhost:5000/api/events/${id}/attendees`, { userId }, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success('Attendee added!');
             await fetchEventData();
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to add attendee');
+            toast.error(error.response?.data?.message || 'Failed to add attendee');
         }
     };
 
@@ -120,9 +129,10 @@ const EventDetailPage = () => {
                 headers: { Authorization: `Bearer ${token}` },
                 data: { userId }
             });
+            toast.success('Attendee removed!');
             await fetchEventData();
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to remove attendee');
+            toast.error(error.response?.data?.message || 'Failed to remove attendee');
         }
     };
 

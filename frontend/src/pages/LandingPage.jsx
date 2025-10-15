@@ -1,6 +1,7 @@
 // src/pages/LandingPage.js
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const LandingPage = () => {
   return (

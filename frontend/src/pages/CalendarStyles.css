@@ -1,0 +1,73 @@
+/* src/pages/CalendarStyles.css */
+
+/* Overall Calendar Container */
+.rbc-calendar {
+  color: #e5e7eb; /* Light grey text */
+}
+
+/* Toolbar (Next, Prev, Month buttons) */
+.rbc-toolbar {
+  margin-bottom: 20px;
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff; /* White text for the month name */
+}
+
+.rbc-btn-group button {
+  background-color: #374151; /* Dark grey button background */
+  color: #e5e7eb;
+  border: 1px solid #4b5563;
+  transition: background-color 0.2s;
+}
+
+.rbc-btn-group button:hover,
+.rbc-btn-group button:focus {
+  background-color: #4b5563; /* Slightly lighter on hover */
+  outline: none;
+}
+
+/* Active button (e.g., the selected 'Month' view) */
+.rbc-btn-group button.rbc-active {
+  background-color: #f59e0b; /* Amber accent color */
+  color: #111827; /* Dark text for contrast */
+  font-weight: bold;
+  border-color: #f59e0b;
+}
+
+/* Header row (Sun, Mon, Tue, etc.) */
+.rbc-header {
+  border-bottom: 2px solid #374151;
+  padding: 10px 0;
+  color: #f59e0b; /* Amber color for days of the week */
+  font-weight: bold;
+}
+
+/* Individual date cells */
+.rbc-date-cell {
+  color: #d1d5db;
+}
+
+/* Background for days not in the current month */
+.rbc-off-range-bg {
+  background-color: #1f2937; /* Darker background for other month days */
+}
+
+/* Highlight for the current day */
+.rbc-today {
+  background-color: #f59e0b33; /* Transparent amber */
+}
+
+/* Event styling */
+.rbc-event {
+  background-color: #ca8a04; /* Darker amber for events */
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
+.rbc-event:focus {
+  outline: none;
+}

@@ -1,9 +1,10 @@
 // src/pages/Dashboard.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
+import toast from 'react-hot-toast';
 import EventCard from '../components/EventCard';
 import EventModal from '../components/EventModal';
 
@@ -13,7 +14,6 @@ const Dashboard = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const navigate = useNavigate();
 
-  // Fetches all events and their corresponding progress
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -21,23 +21,18 @@ const Dashboard = () => {
         navigate('/login');
         return;
       }
-      // 1. Fetch all events
       const response = await axios.get('http://localhost:5000/api/events', {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      // 2. For each event, create a promise to fetch its progress
       const eventsWithProgress = await Promise.all(
         response.data.map(async (event) => {
           const progressRes = await axios.get(`http://localhost:5000/api/tasks/progress/${event._id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          // 3. Combine event data with its progress
           return { ...event, progress: progressRes.data.progress };
         })
       );
-
-      setEvents(eventsWithProgress); // 4. Set the final combined data to state
+      setEvents(eventsWithProgress);
     } catch (error) {
       console.error('Failed to fetch events:', error);
       if (error.response && error.response.status === 401) {
@@ -63,47 +58,43 @@ const Dashboard = () => {
 
   const handleSaveEvent = async (eventData) => {
     const token = localStorage.getItem('token');
-    try {
-      if (currentEvent) {
-        await axios.put(`http://localhost:5000/api/events/${currentEvent._id}`, eventData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert('Event updated successfully!');
-      } else {
-        await axios.post('http://localhost:5000/api/events', eventData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert('Event created successfully!');
-      }
-      
-      handleCloseModal();
-      fetchEvents();
+    const promise = currentEvent
+      ? axios.put(`http://localhost:5000/api/events/${currentEvent._id}`, eventData, { headers: { Authorization: `Bearer ${token}` } })
+      : axios.post('http://localhost:5000/api/events', eventData, { headers: { Authorization: `Bearer ${token}` } });
 
-    } catch (error) {
-      console.error('Failed to save event:', error);
-      alert('Failed to save event.');
-    }
+    toast.promise(promise, {
+      loading: 'Saving event...',
+      success: `Event ${currentEvent ? 'updated' : 'created'} successfully!`,
+      error: 'Failed to save event.',
+    });
+
+    promise.then(() => {
+        handleCloseModal();
+        fetchEvents();
+    }).catch(error => console.error('Failed to save event:', error));
   };
 
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/events/${eventId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      const promise = axios.delete(`http://localhost:5000/api/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      toast.promise(promise, {
+        loading: 'Deleting event...',
+        success: 'Event deleted successfully!',
+        error: 'Failed to delete event.',
+      });
+
+      promise.then(() => {
         setEvents(events.filter((event) => event._id !== eventId));
-        alert('Event deleted successfully!');
-      } catch (error) {
-        console.error('Failed to delete event:', error);
-        alert('Failed to delete event.');
-      }
+      }).catch(error => console.error('Failed to delete event:', error));
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    alert('You have been logged out.');
+    toast.success('You have been logged out.');
     navigate('/login');
   };
 
@@ -115,18 +106,16 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold text-white">My Events</h1>
             <p className="text-gray-400 mt-1">Here’s what you’ve got planned.</p>
           </div>
-          <div className="flex gap-4 mt-4 sm:mt-0">
-            <button 
-              onClick={() => handleOpenModal()}
-              className="bg-amber-500 text-black font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-amber-600 transition-colors"
-            >
+          <div className="flex gap-4 mt-4 sm:items-center sm:mt-0">
+            <Link to="/calendar" className="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-gray-700 transition-colors">
+              <Calendar size={18} />
+              Calendar View
+            </Link>
+            <button onClick={() => handleOpenModal()} className="bg-amber-500 text-black font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-amber-600 transition-colors">
               <Plus size={20} />
               Add New Event
             </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600/80 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
-            >
+            <button onClick={handleLogout} className="bg-red-600/80 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
               Log Out
             </button>
           </div>
@@ -135,12 +124,7 @@ const Dashboard = () => {
         {events.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <EventCard
-                key={event._id}
-                event={event}
-                onDelete={handleDeleteEvent}
-                onEdit={handleOpenModal}
-              />
+              <EventCard key={event._id} event={event} onDelete={handleDeleteEvent} onEdit={handleOpenModal} />
             ))}
           </div>
         ) : (
@@ -150,13 +134,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
-
-      <EventModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSaveEvent}
-        eventToEdit={currentEvent}
-      />
+      <EventModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveEvent} eventToEdit={currentEvent} />
     </div>
   );
 };
