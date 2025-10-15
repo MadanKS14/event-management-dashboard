@@ -19,7 +19,6 @@ const TaskItem = ({ task, onStatusChange }) => {
             {task.name}
           </p>
           <p className="text-xs text-gray-400">
-            {/* Display the assigned attendee's name if it exists */}
             Assigned to: {task.assignedAttendee?.name || 'N/A'}
           </p>
         </div>

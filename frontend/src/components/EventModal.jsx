@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import FormInput from './FormInput';
 
-const EventModal = ({ isOpen, onClose, onSave, eventToEdit }) => {
+const EventModal = ({ isOpen, onClose, onSave, eventToEdit, isSaving }) => { // Add isSaving prop
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -12,21 +12,18 @@ const EventModal = ({ isOpen, onClose, onSave, eventToEdit }) => {
     location: '',
   });
 
-  // This effect pre-fills the form when editing an event
   useEffect(() => {
     if (eventToEdit) {
       setFormData({
         name: eventToEdit.name,
         description: eventToEdit.description,
-        // Format date to YYYY-MM-DD for the date input field
         date: new Date(eventToEdit.date).toISOString().split('T')[0],
         location: eventToEdit.location,
       });
     } else {
-      // Reset form for creating a new event
       setFormData({ name: '', description: '', date: '', location: '' });
     }
-  }, [eventToEdit, isOpen]); // Rerun when the event to edit or modal visibility changes
+  }, [eventToEdit, isOpen]);
 
   if (!isOpen) {
     return null;
@@ -65,15 +62,21 @@ const EventModal = ({ isOpen, onClose, onSave, eventToEdit }) => {
             <button
               type="button"
               onClick={onClose}
-              className="py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+              disabled={isSaving} // Disable cancel button during save
+              className="py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="py-2 px-4 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-600 transition-colors"
+              disabled={isSaving} // Disable submit button during save
+              className="py-2 px-4 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-600 transition-colors w-32 disabled:opacity-50"
             >
-              {isEditing ? 'Update Event' : 'Create Event'}
+              {isSaving ? (
+                <div className="animate-spin h-5 w-5 border-t-2 border-black rounded-full mx-auto"></div>
+              ) : (
+                isEditing ? 'Update Event' : 'Create Event'
+              )}
             </button>
           </div>
         </form>
