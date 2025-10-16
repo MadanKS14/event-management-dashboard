@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import toast from 'react-hot-toast'; // Import toast
+import toast from 'react-hot-toast';
 import FormInput from '../components/FormInput';
 
 const RegisterPage = () => {
@@ -21,9 +21,19 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/users/register', formData);
-      toast.success('Registration successful! Please log in.');
-      navigate('/login');
+      // The backend will now send back the user data and a token
+      const response = await axios.post('http://localhost:5000/api/users/register', formData);
+      const { token } = response.data;
+      
+      // --- THIS IS THE KEY CHANGE ---
+      // 1. Save the token to localStorage, effectively logging the user in
+      localStorage.setItem('token', token);
+      
+      toast.success('Registration successful! Welcome!');
+      
+      // 2. Redirect directly to the dashboard
+      navigate('/dashboard');
+
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);

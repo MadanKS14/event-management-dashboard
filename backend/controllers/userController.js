@@ -9,9 +9,12 @@ const generateToken = (id) => {
   });
 };
 
+// backend/controllers/userController.js
+
+// ... (imports and generateToken function are the same)
+
 // @desc    Register new user
 // @route   POST /api/users/register
-// @access  Public
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -19,26 +22,28 @@ const registerUser = async (req, res) => {
     return res.status(400).json({ message: 'Please add all fields' });
   }
 
-  // Check if user already exists
   const userExists = await User.findOne({ email });
   if (userExists) {
     return res.status(400).json({ message: 'User already exists' });
   }
 
-  // Create user
   try {
     const user = await User.create({ name, email, password });
+
+    // --- THIS IS THE KEY CHANGE ---
+    // Return the user and a new token, just like in the login function
     res.status(201).json({
       _id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(user._id), // Generate and send the token
     });
   } catch (error) {
     res.status(400).json({ message: 'Invalid user data', error: error.message });
   }
 };
 
+// ... (loginUser function is the same)
 // @desc    Authenticate a user
 // @route   POST /api/users/login
 // @access  Public
