@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-const TaskItem = ({ task, onStatusChange }) => {
+const TaskItem = ({ task, onStatusChange, isReadOnly }) => {
   const isCompleted = task.status === 'Completed';
 
   return (
@@ -12,7 +12,8 @@ const TaskItem = ({ task, onStatusChange }) => {
           type="checkbox"
           checked={isCompleted}
           onChange={() => onStatusChange(task._id, isCompleted ? 'Pending' : 'Completed')}
-          className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-600 cursor-pointer"
+          className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-600 disabled:cursor-not-allowed"
+          disabled={isReadOnly} // <-- Disable checkbox if event is completed
         />
         <div>
           <p className={`text-white ${isCompleted ? 'line-through text-gray-500' : ''}`}>

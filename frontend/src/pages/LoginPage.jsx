@@ -3,14 +3,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import toast from 'react-hot-toast'; // Import toast
+import toast from 'react-hot-toast';
 import FormInput from '../components/FormInput';
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,9 +18,13 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/api/users/login', formData);
-      const { token } = response.data;
+      
+      // --- THIS IS THE KEY CHANGE ---
+      const { token, role ,name} = response.data; // Destructure role from the response
       
       localStorage.setItem('token', token);
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('userName', name); // <-- Save the user's role
       
       toast.success('Login successful!');
       navigate('/dashboard');

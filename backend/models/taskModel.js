@@ -1,3 +1,5 @@
+// backend/models/taskModel.js
+
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
@@ -21,6 +23,12 @@ const taskSchema = new mongoose.Schema({
     ref: 'Event',
   },
   assignedAttendee: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User',
+  },
+  // --- ADDED THIS FIELD ---
+  assignedBy: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'User',

@@ -7,11 +7,11 @@ import { Calendar, MapPin, Edit, Trash2 } from 'lucide-react';
 const EventCard = ({ event, onDelete, onEdit }) => {
   const progress = event.progress || 0;
 
-  // Determine the status and styles for the badge
   const now = new Date();
-  now.setHours(0, 0, 0, 0); // Normalize to the start of today for accurate comparison
+  now.setHours(0, 0, 0, 0);
   const eventDate = new Date(event.date);
   const status = eventDate >= now ? 'Upcoming' : 'Completed';
+  const isCompleted = status === 'Completed';
 
   const getStatusStyles = () => {
     if (status === 'Upcoming') return 'bg-blue-500/20 text-blue-300';
@@ -26,12 +26,25 @@ const EventCard = ({ event, onDelete, onEdit }) => {
           <div className="flex justify-between items-start mb-2">
             <h3 className="text-xl font-bold text-white pr-4">{event.name}</h3>
             <div className="flex gap-3 z-10" onClick={(e) => e.preventDefault()}>
-              <button onClick={() => onEdit(event)} className="text-gray-400 hover:text-amber-400" title="Edit Event"><Edit size={18} /></button>
-              <button onClick={() => onDelete(event._id)} className="text-gray-400 hover:text-red-500" title="Delete Event"><Trash2 size={18} /></button>
+              <button 
+                onClick={() => onEdit(event)} 
+                className="text-gray-400 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed" 
+                title="Edit Event"
+                disabled={isCompleted}
+              >
+                <Edit size={18} />
+              </button>
+              <button 
+                onClick={() => onDelete(event._id)} 
+                className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed" 
+                title="Delete Event"
+                disabled={isCompleted}
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
           </div>
 
-          {/* Status Badge */}
           <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${getStatusStyles()}`}>
             {status}
           </span>

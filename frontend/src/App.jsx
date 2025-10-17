@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; // Import the Toaster component
+import { Toaster } from 'react-hot-toast';
 
 // Import Page Components
 import LandingPage from './pages/LandingPage';
@@ -11,6 +11,8 @@ import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import EventDetailPage from './pages/EventDetailPage';
 import CalendarPage from './pages/CalendarPage';
+import UserManagementPage from './pages/UserManagementPage';
+import AccountPage from './pages/AccountPage'; // This was already imported correctly
 
 // Import Utility Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,26 +20,24 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <>
-      {/* This component will render all toast notifications */}
       <Toaster
         position="top-right"
         toastOptions={{
           success: {
             style: {
-              background: '#22c55e', // Green
+              background: '#22c55e',
               color: 'white',
             },
           },
           error: {
             style: {
-              background: '#ef4444', // Red
+              background: '#ef4444',
               color: 'white',
             },
           },
         }}
       />
 
-      {/* Main application routing */}
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -66,6 +66,23 @@ function App() {
           element={
             <ProtectedRoute>
               <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UserManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* --- ADD THIS MISSING ROUTE --- */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <AccountPage />
             </ProtectedRoute>
           }
         />

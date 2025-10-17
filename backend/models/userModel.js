@@ -16,6 +16,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a password'],
   },
+  // --- ADD THIS NEW FIELD ---
+  role: {
+    type: String,
+    enum: ['Admin', 'Attendee'], // The role can only be one of these two values
+    default: 'Attendee',       // New users will be an 'Attendee' by default
+  },
+  // --- END OF CHANGE ---
 }, {
   timestamps: true,
 });

@@ -7,11 +7,7 @@ import toast from 'react-hot-toast';
 import FormInput from '../components/FormInput';
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,17 +17,15 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // The backend will now send back the user data and a token
       const response = await axios.post('http://localhost:5000/api/users/register', formData);
-      const { token } = response.data;
-      
+
       // --- THIS IS THE KEY CHANGE ---
-      // 1. Save the token to localStorage, effectively logging the user in
+      const { token, role } = response.data; // Destructure role from the response
+
       localStorage.setItem('token', token);
-      
+      localStorage.setItem('userRole', role); // <-- Save the user's role
+
       toast.success('Registration successful! Welcome!');
-      
-      // 2. Redirect directly to the dashboard
       navigate('/dashboard');
 
     } catch (error) {

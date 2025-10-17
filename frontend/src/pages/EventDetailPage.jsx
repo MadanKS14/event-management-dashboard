@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Calendar, MapPin, Users, ClipboardList, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, ClipboardList, UserPlus, X, Info } from 'lucide-react';
 import TaskItem from '../components/TaskItem';
 
 const EventDetailPage = () => {
@@ -34,11 +34,9 @@ const EventDetailPage = () => {
                 axios.get(`http://localhost:5000/api/tasks/event/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } })
             ]);
-
             setEvent(eventRes.data);
             setTasks(tasksRes.data);
             setAllUsers(usersRes.data);
-
             if (eventRes.data?.attendees?.length > 0 && !assignedAttendeeId) {
                 setAssignedAttendeeId(eventRes.data.attendees[0]._id);
             }
@@ -54,7 +52,7 @@ const EventDetailPage = () => {
     useEffect(() => {
         setLoading(true);
         fetchEventData();
-    }, [id]);
+    }, [id, fetchEventData]);
 
     const handleAddTask = async (e) => {
         e.preventDefault();
@@ -68,13 +66,13 @@ const EventDetailPage = () => {
                 deadline: new Date(),
                 eventId: id,
                 assignedAttendeeId,
-                status: 'Pending', // New tasks are 'Pending' by default
+                status: 'Pending',
             }, { headers: { Authorization: `Bearer ${token}` } });
             toast.success('Task added successfully!');
             setNewTaskName('');
             await fetchEventData();
         } catch (error) {
-            toast.error('Failed to add task.');
+            toast.error(error.response?.data?.message || 'Failed to add task.');
         }
     };
 
@@ -85,11 +83,10 @@ const EventDetailPage = () => {
             setTasks(tasks.map(task => task._id === taskId ? response.data : task));
             await fetchProgress();
         } catch (error) {
-            console.error("Failed to update task status:", error);
-            toast.error("Failed to update task status.");
+            toast.error(error.response?.data?.message || "Failed to update task status.");
         }
     };
-
+    
     const handleAddAttendee = async (userId) => {
         try {
             const token = localStorage.getItem('token');
@@ -123,6 +120,10 @@ const EventDetailPage = () => {
         return <div className="bg-[#0A1931] min-h-screen flex justify-center items-center text-white text-xl">Event not found.</div>;
     }
 
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const isCompleted = new Date(event.date) < now;
+
     const filteredUsers = searchTerm
         ? allUsers.filter(user =>
             user.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -136,6 +137,13 @@ const EventDetailPage = () => {
                 <Link to="/dashboard" className="inline-flex items-center gap-2 text-amber-400 hover:underline mb-6">
                     <ArrowLeft size={18} /> Back to Dashboard
                 </Link>
+
+                {isCompleted && (
+                    <div className="bg-green-500/20 text-green-300 p-4 rounded-lg flex items-center justify-center gap-3 mb-6">
+                        <Info size={20} />
+                        <span className="font-semibold">This event is completed. All editing functions are disabled.</span>
+                    </div>
+                )}
 
                 <div className="bg-[#122142] p-6 rounded-xl mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
@@ -159,20 +167,20 @@ const EventDetailPage = () => {
                     <div className="lg:col-span-2 bg-[#122142] p-6 rounded-xl">
                         <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><ClipboardList /> Task Tracker</h2>
                         <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-2 mb-6">
-                            <input type="text" value={newTaskName} onChange={(e) => setNewTaskName(e.target.value)} placeholder="Add a new task..." className="flex-grow bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500" />
-                            <select value={assignedAttendeeId} onChange={(e) => setAssignedAttendeeId(e.target.value)} className="bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <input type="text" value={newTaskName} onChange={(e) => setNewTaskName(e.target.value)} placeholder="Add a new task..." className="flex-grow bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isCompleted} />
+                            <select value={assignedAttendeeId} onChange={(e) => setAssignedAttendeeId(e.target.value)} className="bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isCompleted}>
                                 <option value="" disabled>Assign to...</option>
                                 {event.attendees.map(attendee => <option key={attendee._id} value={attendee._id}>{attendee.name}</option>)}
                             </select>
-                            <button type="submit" className="bg-amber-500 text-black font-bold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors">Add Task</button>
+                            <button type="submit" className="bg-amber-500 text-black font-bold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={isCompleted}>Add Task</button>
                         </form>
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                             {tasks.length > 0 ? (
                                 tasks.map(task => (
-                                    <TaskItem key={task._id} task={task} onStatusChange={handleUpdateTaskStatus} />
+                                    <TaskItem key={task._id} task={task} onStatusChange={handleUpdateTaskStatus} isReadOnly={isCompleted} />
                                 ))
                             ) : (
-                                <p className="text-gray-500 text-center py-4">No tasks have been added for this event yet.</p>
+                                <p className="text-gray-500 text-center py-4">No tasks for this event yet.</p>
                             )}
                         </div>
                     </div>
@@ -180,7 +188,7 @@ const EventDetailPage = () => {
                     <div className="lg:col-span-1 bg-[#122142] p-6 rounded-xl">
                         <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Attendees ({event.attendees.length})</h2>
                         <div className="relative mb-4">
-                            <input type="text" placeholder="Search users to add..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                            <input type="text" placeholder="Search users to add..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-[#0A1931] border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isCompleted} />
                             {filteredUsers.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 bg-[#1F294A] border border-gray-600 rounded-b-lg mt-1 max-h-48 overflow-y-auto z-10">
                                     {filteredUsers.map(user => (
@@ -200,7 +208,9 @@ const EventDetailPage = () => {
                                             <p className="font-semibold">{attendee.name}</p>
                                             <p className="text-xs text-gray-400">{attendee.email}</p>
                                         </div>
-                                        <button onClick={() => handleRemoveAttendee(attendee._id)} className="text-gray-400 hover:text-red-500" title={`Remove ${attendee.name}`}><X size={18} /></button>
+                                        <button onClick={() => handleRemoveAttendee(attendee._id)} className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed" disabled={isCompleted}>
+                                            <X size={18} />
+                                        </button>
                                     </div>
                                 ))
                             ) : (
